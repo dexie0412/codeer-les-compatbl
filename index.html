@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beginnen met coderen – les voor de brugklas</title>
+<style>
+  :root{
+    --bg:#f6f7fb; --card:#ffffff; --ink:#1d2433; --muted:#5b6578; --line:#e3e7f0;
+    --brand:#6c4cf5; --brand2:#00b8a9; --warm:#ff7a59; --sun:#ffc83d; --pink:#ff4f8b;
+    --code-bg:#14172a; --code-ink:#e8eaff;
+    --shadow:0 10px 30px rgba(40,50,90,.10);
+    --radius:20px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0f1220; --card:#181c30; --ink:#eef0fb; --muted:#9aa3bd; --line:#2a3050; --shadow:0 10px 30px rgba(0,0,0,.35); }
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.6;font-size:17px}
+  h1,h2,h3{line-height:1.2;margin:0 0 .4em}
+  a{color:var(--brand)}
+  code,pre,textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px}
+
+  /* HERO */
+  .hero{position:relative;overflow:hidden;color:#fff;padding:64px 0 90px;
+    background:linear-gradient(135deg,#6c4cf5 0%,#9b5cff 45%,#ff4f8b 100%)}
+  .hero::before,.hero::after{content:"";position:absolute;border-radius:50%;filter:blur(2px);opacity:.25;background:#fff}
+  .hero::before{width:380px;height:380px;right:-100px;top:-120px}
+  .hero::after{width:220px;height:220px;left:-60px;bottom:-90px;background:var(--sun);opacity:.35}
+  .hero .tag{display:inline-block;background:rgba(255,255,255,.2);padding:6px 14px;border-radius:99px;font-weight:600;font-size:14px;margin-bottom:16px;backdrop-filter:blur(4px)}
+  .hero h1{font-size:clamp(34px,6vw,58px);font-weight:800;letter-spacing:-.02em;max-width:14ch}
+  .hero p{font-size:19px;max-width:52ch;opacity:.95;margin:12px 0 26px}
+  .hero .facts{display:flex;flex-wrap:wrap;gap:10px}
+  .pill{background:rgba(255,255,255,.18);padding:8px 14px;border-radius:99px;font-weight:600;font-size:15px}
+  .typing{font-family:ui-monospace,Menlo,monospace;background:rgba(0,0,0,.28);display:inline-block;padding:10px 16px;border-radius:12px;margin-bottom:22px;font-size:16px}
+  .typing .cur{display:inline-block;width:9px;height:1.05em;background:#fff;vertical-align:-3px;margin-left:2px;animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  /* TIMER BAR */
+  .bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .bar .wrap{display:flex;align-items:center;gap:14px;padding-top:10px;padding-bottom:10px;flex-wrap:wrap}
+  .clock{font-variant-numeric:tabular-nums;font-weight:800;font-size:22px;min-width:76px}
+  .btn{border:0;cursor:pointer;font:inherit;font-weight:700;border-radius:12px;padding:9px 16px;background:var(--brand);color:#fff;transition:transform .12s, box-shadow .12s, background .2s}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(108,76,245,.35)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+  .btn.ghost:hover{box-shadow:none;border-color:var(--brand)}
+  .btn.green{background:var(--brand2)} .btn.green:hover{box-shadow:0 6px 16px rgba(0,184,169,.35)}
+  .btn.warm{background:var(--warm)} .btn.warm:hover{box-shadow:0 6px 16px rgba(255,122,89,.35)}
+  .chips{display:flex;gap:6px;flex:1;min-width:260px;overflow-x:auto}
+  .chip{flex:1;min-width:34px;height:34px;border-radius:10px;background:var(--line);color:var(--muted);font-weight:700;font-size:13px;display:grid;place-items:center;text-decoration:none;transition:.25s;white-space:nowrap;padding:0 8px}
+  .chip.active{background:var(--brand);color:#fff;transform:scale(1.04)}
+  .chip.done{background:var(--brand2);color:#fff}
+  .progress{height:4px;background:var(--line)}
+  .progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--pink));transition:width 1s linear}
+
+  /* SECTIONS */
+  section{padding:46px 0 10px;scroll-margin-top:90px}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px;margin-bottom:22px;border:1px solid var(--line)}
+  .sec-head{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+  .num{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;font-size:26px;font-weight:800;color:#fff;flex:none}
+  .sec-head h2{font-size:clamp(24px,4vw,32px);margin:0}
+  .time{display:inline-block;font-size:13px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--line);color:var(--muted);margin-top:4px}
+  .c1{background:linear-gradient(135deg,#6c4cf5,#9b5cff)}
+  .c2{background:linear-gradient(135deg,#ff7a59,#ff4f8b)}
+  .c3{background:linear-gradient(135deg,#00b8a9,#3ddc97)}
+  .c4{background:linear-gradient(135deg,#ffb020,#ff7a59)}
+  .c5{background:linear-gradient(135deg,#3b82f6,#6c4cf5)}
+  .c6{background:linear-gradient(135deg,#ff4f8b,#a64cf5)}
+  .c7{background:linear-gradient(135deg,#00b8a9,#3b82f6)}
+  .goal{background:color-mix(in srgb,var(--brand) 10%,transparent);border-left:5px solid var(--brand);padding:12px 16px;border-radius:0 12px 12px 0;margin:14px 0}
+  .tip{background:color-mix(in srgb,var(--sun) 22%,transparent);border-left:5px solid var(--sun);padding:12px 16px;border-radius:0 12px 12px 0;margin:14px 0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:16px 0}
+  .mini{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .mini .em{font-size:30px}
+  .mini h3{font-size:18px;margin-top:6px}
+  .mini p{margin:0;color:var(--muted);font-size:15px}
+  pre.code{background:var(--code-bg);color:var(--code-ink);padding:16px 18px;border-radius:14px;overflow:auto;font-size:15px;line-height:1.55;margin:12px 0}
+  .k{color:#ff7ab6}.s{color:#9be29b}.c{color:#7f88ad}.n{color:#ffc83d}.f{color:#7dd3fc}
+  table{border-collapse:collapse;width:100%;font-size:15px}
+  th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.05em}
+  ol.steps{counter-reset:s;list-style:none;padding:0;margin:12px 0}
+  ol.steps li{counter-increment:s;position:relative;padding:8px 0 8px 46px}
+  ol.steps li::before{content:counter(s);position:absolute;left:0;top:6px;width:32px;height:32px;border-radius:50%;background:var(--brand);color:#fff;font-weight:800;display:grid;place-items:center;font-size:15px}
+  kbd{background:var(--line);border-radius:6px;padding:1px 7px;font-size:.9em}
+
+  /* PLAYGROUND */
+  .pg{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+  @media (max-width:760px){.pg{grid-template-columns:1fr}}
+  .pg .pane{display:flex;flex-direction:column;min-width:0}
+  .pg label{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+  .pg textarea{width:100%;height:270px;resize:vertical;background:var(--code-bg);color:var(--code-ink);border:2px solid transparent;border-radius:14px;padding:14px;font-size:14.5px;line-height:1.5;tab-size:2;outline:none}
+  .pg textarea:focus{border-color:var(--brand)}
+  .pg iframe{width:100%;height:270px;border:2px solid var(--line);border-radius:14px;background:#fff;flex:1}
+  .pg .tools{display:flex;gap:8px;margin-top:8px}
+  .pg .tools .btn{padding:6px 12px;font-size:14px}
+
+  /* CHECKLIST */
+  .check{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px;margin:8px 0;cursor:pointer;transition:.2s;background:var(--bg)}
+  .check:hover{border-color:var(--brand)}
+  .check input{width:22px;height:22px;accent-color:var(--brand2);margin-top:2px;flex:none}
+  .check.done{border-color:var(--brand2);background:color-mix(in srgb,var(--brand2) 12%,transparent)}
+  .check.done span{text-decoration:line-through;opacity:.7}
+  .stars{font-size:13px;color:var(--warm);font-weight:700;margin-left:6px}
+
+  /* QUIZ */
+  .q{margin:18px 0}
+  .q h3{font-size:18px}
+  .opts{display:grid;gap:8px;margin-top:8px}
+  .opt{text-align:left;font:inherit;background:var(--bg);border:2px solid var(--line);color:var(--ink);padding:12px 14px;border-radius:12px;cursor:pointer;transition:.15s}
+  .opt:hover:not(:disabled){border-color:var(--brand)}
+  .opt.right{border-color:var(--brand2);background:color-mix(in srgb,var(--brand2) 16%,transparent)}
+  .opt.wrong{border-color:var(--pink);background:color-mix(in srgb,var(--pink) 14%,transparent)}
+  .opt:disabled{cursor:default}
+  .fb{font-size:15px;margin-top:6px;min-height:1.4em;color:var(--muted)}
+  .score{font-size:22px;font-weight:800;margin-top:10px}
+
+  /* TEACHER */
+  details.teacher{margin-top:14px;border:1.5px dashed var(--line);border-radius:14px;padding:10px 16px}
+  details.teacher summary{cursor:pointer;font-weight:700;color:var(--muted)}
+  details.teacher ul{margin:10px 0 4px;padding-left:20px}
+  footer{padding:40px 0 70px;text-align:center;color:var(--muted)}
+  .confetti{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden}
+  .confetti i{position:absolute;top:-20px;width:10px;height:14px;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+  @media print{.bar,.pg .tools{display:none}.card{box-shadow:none;break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">Les voor de brugklas · 50 minuten</span>
+    <div class="typing" aria-hidden="true"><span id="typed"></span><span class="cur"></span></div>
+    <h1>Jouw eerste stappen in coderen</h1>
+    <p>Vandaag ga je zelf een webpagina bouwen, er kleur aan geven en hem laten reageren op een klik. Je hebt niets nodig, alleen dit scherm.</p>
+    <div class="facts">
+      <span class="pill">🌐 HTML</span>
+      <span class="pill">🎨 CSS</span>
+      <span class="pill">⚡ JavaScript</span>
+      <span class="pill">🐍 Python (kijken)</span>
+    </div>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="wrap">
+    <div class="clock" id="clock">50:00</div>
+    <button class="btn green" id="startBtn">▶ Start les</button>
+    <button class="btn ghost" id="resetBtn">↺</button>
+    <nav class="chips" id="chips"></nav>
+  </div>
+  <div class="progress"><i id="prog"></i></div>
+</div>
+
+<main class="wrap">
+
+<!-- 1 -->
+<section id="s1" data-start="0">
+  <div class="card">
+    <div class="sec-head"><div class="num c1">1</div><div><h2>Wat is code eigenlijk?</h2><span class="time">0 – 5 min</span></div></div>
+    <div class="goal"><b>Doel:</b> je weet wat code is en waarom computers precies moeten krijgen wat je bedoelt.</div>
+    <p>Een computer kan snel rekenen, maar hij kan <b>niet zelf nadenken</b>. Hij doet alleen wat jij opschrijft, stap voor stap. Dat opschrijven noemen we <b>code</b>, en de mensen die dat doen heten <b>programmeurs</b>.</p>
+    <p>Denk aan een recept: als je schrijft “doe iets met de eieren”, dan weet niemand wat er moet gebeuren. Bij code moet het dus <b>heel precies</b>.</p>
+
+    <h3>🥪 Mini-opdracht (in tweetallen, 2 minuten)</h3>
+    <p>Jouw partner is een <b>robot</b> en doet alleen letterlijk wat je zegt. Leg uit hoe je een boterham met pindakaas maakt. Je mag maar korte opdrachten geven, zoals “pak het mes”.</p>
+    <div class="tip">💡 <b>Wat merk je?</b> Als één stap ontbreekt (“open de pot”), loopt alles vast. Dat noemen programmeurs een <b>bug</b>. Fouten maken hoort erbij!</div>
+
+    <div class="grid">
+      <div class="mini"><div class="em">📱</div><h3>Apps</h3><p>Elke app op je telefoon is geschreven in code.</p></div>
+      <div class="mini"><div class="em">🎮</div><h3>Games</h3><p>Jouw favoriete game is een lange lijst opdrachten.</p></div>
+      <div class="mini"><div class="em">🌐</div><h3>Websites</h3><p>Alles wat je in je browser ziet, is gebouwd met code.</p></div>
+    </div>
+    <details class="teacher"><summary>👩‍🏫 Docenttips</summary><ul>
+      <li>Laat een leerling de “robot” in de klas voor de groep spelen met echt brood of een tekening, dat levert gegarandeerd gelach op.</li>
+      <li>Koppel terug: <i>“Een computer is zo’n robot.”</i></li>
+    </ul></details>
+  </div>
+</section>
+
+<!-- 2 -->
+<section id="s2" data-start="5">
+  <div class="card">
+    <div class="sec-head"><div class="num c2">2</div><div><h2>HTML: het skelet van een website</h2><span class="time">5 – 15 min</span></div></div>
+    <div class="goal"><b>Doel:</b> je maakt zelf een webpagina met een kop, tekst en een lijstje.</div>
+    <p>HTML vertelt de browser <b>wat er op de pagina staat</b>. Je gebruikt daarvoor <b>tags</b>: een begin-tag en een eind-tag, met je tekst ertussen.</p>
+<pre class="code">&lt;h1&gt;Ik ben een grote kop&lt;/h1&gt;
+&lt;!-- ↑ begin-tag   ↑ tekst   ↑ eind-tag (met een /) --&gt;</pre>
+
+    <table>
+      <tr><th>Tag</th><th>Wat doet het?</th></tr>
+      <tr><td><code>&lt;h1&gt;</code></td><td>Grote kop (er is ook h2, h3…)</td></tr>
+      <tr><td><code>&lt;p&gt;</code></td><td>Een stukje tekst (paragraaf)</td></tr>
+      <tr><td><code>&lt;ul&gt;</code> + <code>&lt;li&gt;</code></td><td>Lijstje met bolletjes</td></tr>
+      <tr><td><code>&lt;b&gt;</code></td><td>Dikgedrukte tekst</td></tr>
+    </table>
+
+    <h3 style="margin-top:22px">✏️ Probeer het zelf</h3>
+    <p>Links staat de code, rechts zie je meteen het resultaat. Verander de tekst en kijk wat er gebeurt!</p>
+
+    <div class="pg" data-pg>
+      <div class="pane"><label>Code <span>HTML</span></label>
+<textarea spellcheck="false">&lt;h1&gt;Hallo, ik ben Sam!&lt;/h1&gt;
+&lt;p&gt;Dit is mijn &lt;b&gt;eerste&lt;/b&gt; webpagina.&lt;/p&gt;
+
+&lt;h2&gt;Mijn hobby's&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;Gamen&lt;/li&gt;
+  &lt;li&gt;Voetballen&lt;/li&gt;
+&lt;/ul&gt;</textarea>
+        <div class="tools"><button class="btn ghost" data-reset>↺ Begin opnieuw</button></div>
+      </div>
+      <div class="pane"><label>Resultaat</label><iframe sandbox="allow-scripts" title="Resultaat"></iframe></div>
+    </div>
+
+    <h3>🎯 Opdrachten</h3>
+    <label class="check"><input type="checkbox"><span>Vervang “Sam” door <b>jouw eigen naam</b>.</span></label>
+    <label class="check"><input type="checkbox"><span>Voeg een <b>derde hobby</b> toe aan het lijstje.</span></label>
+    <label class="check"><input type="checkbox"><span>Maak een nieuwe kop <code>&lt;h2&gt;</code> met “Mijn lievelingseten” en daaronder een <code>&lt;p&gt;</code> <span class="stars">⭐ extra</span></span></label>
+    <div class="tip">🐞 <b>Werkt het niet?</b> Controleer of elke begin-tag een eind-tag heeft, met een <code>/</code>.</div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="s3" data-start="15">
+  <div class="card">
+    <div class="sec-head"><div class="num c3">3</div><div><h2>CSS: maak het mooi</h2><span class="time">15 – 23 min</span></div></div>
+    <div class="goal"><b>Doel:</b> je geeft je pagina kleuren en een eigen stijl.</div>
+    <p>HTML is het skelet, <b>CSS is de kleding</b>. Met CSS bepaal je kleuren, lettergrootte en achtergrond. De opbouw is altijd hetzelfde:</p>
+<pre class="code"><span class="f">h1</span> {                 <span class="c">/* wie wil je veranderen? */</span>
+  <span class="k">color</span>: <span class="s">hotpink</span>;     <span class="c">/* eigenschap: waarde; */</span>
+  <span class="k">font-size</span>: <span class="n">48px</span>;
+}</pre>
+
+    <div class="pg" data-pg>
+      <div class="pane"><label>Code <span>HTML + CSS</span></label>
+<textarea spellcheck="false">&lt;style&gt;
+  body {
+    background: lightyellow;
+    font-family: sans-serif;
+  }
+  h1 {
+    color: hotpink;
+    font-size: 44px;
+  }
+  p {
+    color: darkslateblue;
+  }
+&lt;/style&gt;
+
+&lt;h1&gt;Hallo, ik ben Sam!&lt;/h1&gt;
+&lt;p&gt;Mijn pagina wordt steeds mooier.&lt;/p&gt;</textarea>
+        <div class="tools"><button class="btn ghost" data-reset>↺ Begin opnieuw</button></div>
+      </div>
+      <div class="pane"><label>Resultaat</label><iframe sandbox="allow-scripts" title="Resultaat"></iframe></div>
+    </div>
+
+    <h3>🎯 Opdrachten</h3>
+    <label class="check"><input type="checkbox"><span>Verander de <b>achtergrondkleur</b> naar een kleur die jij mooi vindt (bijv. <code>skyblue</code>, <code>black</code>, <code>#ff9900</code>).</span></label>
+    <label class="check"><input type="checkbox"><span>Maak de kop <b>groter of kleiner</b> met <code>font-size</code>.</span></label>
+    <label class="check"><input type="checkbox"><span>Voeg een regel toe aan <code>h1</code>: <code>text-align: center;</code> <span class="stars">⭐ extra</span></span></label>
+    <div class="tip">🎨 Kleurnamen zoals <code>red</code>, <code>teal</code>, <code>gold</code> werken meteen. Zoek er gerust meer op!</div>
+    <details class="teacher"><summary>👩‍🏫 Docenttips</summary><ul>
+      <li>Vergelijk met een poppetje in Roblox/Minecraft: de pagina (skelet) en de skin (CSS).</li>
+      <li>Veelgemaakte fout: de puntkomma <code>;</code> vergeten. Laat leerlingen elkaars code controleren.</li>
+    </ul></details>
+  </div>
+</section>
+
+<!-- 4 -->
+<section id="s4" data-start="23">
+  <div class="card">
+    <div class="sec-head"><div class="num c4">4</div><div><h2>JavaScript: laat het reageren</h2><span class="time">23 – 35 min</span></div></div>
+    <div class="goal"><b>Doel:</b> je laat een knop iets doen en je gebruikt een <b>variabele</b>.</div>
+    <p>Met HTML en CSS blijft een pagina stil staan. <b>JavaScript</b> maakt hem <b>levend</b>: er gebeurt iets als je klikt, typt of beweegt.</p>
+
+    <div class="grid">
+      <div class="mini"><div class="em">📦</div><h3>Variabele</h3><p>Een doosje met een naam waarin je iets bewaart, zoals je naam of je score.</p></div>
+      <div class="mini"><div class="em">🔘</div><h3>Event</h3><p>Iets wat gebeurt, bijvoorbeeld “er wordt op de knop geklikt”.</p></div>
+      <div class="mini"><div class="em">🧩</div><h3>Functie</h3><p>Een setje opdrachten met een naam, dat je kunt uitvoeren wanneer je wilt.</p></div>
+    </div>
+
+<pre class="code"><span class="k">let</span> score = <span class="n">0</span>;           <span class="c">// variabele: doosje "score" met 0 erin</span>
+score = score + <span class="n">1</span>;       <span class="c">// nu zit er 1 in</span></pre>
+
+    <h3>✏️ Een klik-teller</h3>
+    <p>Klik op de knop rechts. Daarna ga je de code aanpassen!</p>
+
+    <div class="pg" data-pg>
+      <div class="pane"><label>Code <span>HTML + JavaScript</span></label>
+<textarea spellcheck="false">&lt;style&gt;
+  body { font-family: sans-serif; text-align: center; }
+  button { font-size: 22px; padding: 12px 24px; border-radius: 12px; border: 0; background: #6c4cf5; color: white; cursor: pointer; }
+  #score { font-size: 60px; margin: 10px; }
+&lt;/style&gt;
+
+&lt;h2&gt;Klik-spel!&lt;/h2&gt;
+&lt;div id="score"&gt;0&lt;/div&gt;
+&lt;button onclick="klik()"&gt;Klik mij! 👆&lt;/button&gt;
+
+&lt;script&gt;
+  let score = 0;
+
+  function klik() {
+    score = score + 1;
+    document.getElementById("score").textContent = score;
+  }
+&lt;/script&gt;</textarea>
+        <div class="tools"><button class="btn ghost" data-reset>↺ Begin opnieuw</button></div>
+      </div>
+      <div class="pane"><label>Resultaat</label><iframe sandbox="allow-scripts" title="Resultaat"></iframe></div>
+    </div>
+
+    <h3>🎯 Opdrachten</h3>
+    <label class="check"><input type="checkbox"><span>Klik 10 keer. Wat staat er in de variabele <code>score</code>?</span></label>
+    <label class="check"><input type="checkbox"><span>Verander <code>score + 1</code> in <code>score + 5</code>. Wat gebeurt er?</span></label>
+    <label class="check"><input type="checkbox"><span>Verander de tekst van de titel en de knop naar iets eigens.</span></label>
+    <label class="check"><input type="checkbox"><span>Laat de score <b>omlaag</b> tellen met <code>score - 1</code> <span class="stars">⭐ extra</span></span></label>
+
+    <h3 style="margin-top:22px">👋 Nog één: een begroeting</h3>
+    <div class="pg" data-pg>
+      <div class="pane"><label>Code <span>HTML + JavaScript</span></label>
+<textarea spellcheck="false">&lt;style&gt;
+  body { font-family: sans-serif; text-align: center; padding-top: 10px; }
+  input, button { font-size: 18px; padding: 10px 14px; border-radius: 10px; }
+  input { border: 2px solid #ccc; }
+  button { border: 0; background: #00b8a9; color: #fff; cursor: pointer; }
+  #groet { font-size: 28px; margin-top: 18px; }
+&lt;/style&gt;
+
+&lt;input id="naam" placeholder="Typ je naam"&gt;
+&lt;button onclick="zegHallo()"&gt;Zeg hallo&lt;/button&gt;
+&lt;div id="groet"&gt;&lt;/div&gt;
+
+&lt;script&gt;
+  function zegHallo() {
+    let naam = document.getElementById("naam").value;
+    document.getElementById("groet").textContent = "Hallo " + naam + "! 🎉";
+  }
+&lt;/script&gt;</textarea>
+        <div class="tools"><button class="btn ghost" data-reset>↺ Begin opnieuw</button></div>
+      </div>
+      <div class="pane"><label>Resultaat</label><iframe sandbox="allow-scripts" title="Resultaat"></iframe></div>
+    </div>
+    <label class="check"><input type="checkbox"><span>Verander “Hallo” in een andere begroeting, bijvoorbeeld “Yo” of “Welkom”.</span></label>
+    <div class="tip">⚠️ In code is <b>hoofdletter ≠ kleine letter</b>: <code>score</code> en <code>Score</code> zijn voor de computer twee verschillende dingen.</div>
+    <details class="teacher"><summary>👩‍🏫 Docenttips</summary><ul>
+      <li>Je hoeft <code>function</code> en <code>getElementById</code> niet uit te leggen: “dit zoekt het vakje met die naam op de pagina”. Het gaat om het idee dat code kan <i>reageren</i>.</li>
+      <li>Laat leerlingen voorspellen wat er gebeurt voordat ze een getal aanpassen.</li>
+    </ul></details>
+  </div>
+</section>
+
+<!-- 5 -->
+<section id="s5" data-start="35">
+  <div class="card">
+    <div class="sec-head"><div class="num c5">5</div><div><h2>Python en andere talen</h2><span class="time">35 – 40 min</span></div></div>
+    <div class="goal"><b>Doel:</b> je ziet dat er veel programmeertalen zijn en dat de ideeën hetzelfde blijven.</div>
+    <p>Er bestaan honderden programmeertalen. Elke taal heeft zijn eigen “spelling”, maar de ideeën (variabelen, herhalen, beslissen) zijn overal gelijk. Wie er één snapt, leert de rest sneller.</p>
+
+    <table>
+      <tr><th>Taal</th><th>Waar gebruikt?</th><th>Zelfde idee: 3 keer “Hallo” laten zien</th></tr>
+      <tr><td><b>🐍 Python</b></td><td>Games, AI, wetenschap, robots</td>
+        <td><pre class="code" style="margin:0"><span class="k">for</span> i <span class="k">in</span> <span class="f">range</span>(<span class="n">3</span>):
+    <span class="f">print</span>(<span class="s">"Hallo!"</span>)</pre></td></tr>
+      <tr><td><b>⚡ JavaScript</b></td><td>Websites en web-apps</td>
+        <td><pre class="code" style="margin:0"><span class="k">for</span> (<span class="k">let</span> i = <span class="n">0</span>; i &lt; <span class="n">3</span>; i++) {
+  console.<span class="f">log</span>(<span class="s">"Hallo!"</span>);
+}</pre></td></tr>
+      <tr><td><b>🧱 Scratch</b></td><td>Leren met blokjes</td>
+        <td>Blok “herhaal 3 keer” met daarin “zeg Hallo!”</td></tr>
+    </table>
+
+    <div class="tip">🔎 <b>Vind de overeenkomsten:</b> welk woord bepaalt hoe vaak er herhaald wordt? Welk getal is dat? Wat is een <b>herhaling</b> (loop)? Bespreek dit met je buur.</div>
+
+    <h3>🔁 Probeer de herhaling zelf in JavaScript</h3>
+    <div class="pg" data-pg>
+      <div class="pane"><label>Code <span>JavaScript</span></label>
+<textarea spellcheck="false">&lt;body style="font-family:sans-serif"&gt;
+&lt;div id="uit"&gt;&lt;/div&gt;
+
+&lt;script&gt;
+  for (let i = 1; i &lt;= 3; i++) {
+    document.getElementById("uit").innerHTML += "Hallo! 👋 (keer " + i + ")&lt;br&gt;";
+  }
+&lt;/script&gt;
+&lt;/body&gt;</textarea>
+        <div class="tools"><button class="btn ghost" data-reset>↺ Begin opnieuw</button></div>
+      </div>
+      <div class="pane"><label>Resultaat</label><iframe sandbox="allow-scripts" title="Resultaat"></iframe></div>
+    </div>
+    <label class="check"><input type="checkbox"><span>Verander <code>3</code> in <code>10</code> (op de plek van <code>&lt;= 3</code>). Hoe vaak zie je nu “Hallo”?</span></label>
+  </div>
+</section>
+
+<!-- 6 -->
+<section id="s6" data-start="40">
+  <div class="card">
+    <div class="sec-head"><div class="num c6">6</div><div><h2>Jouw eigen mini-project</h2><span class="time">40 – 47 min</span></div></div>
+    <div class="goal"><b>Doel:</b> je combineert wat je geleerd hebt tot een eigen pagina.</div>
+    <p>Maak een pagina “<b>Alles over mij</b>” met alles wat je vandaag geleerd hebt. Je mag de editor hieronder gebruiken.</p>
+    <ol class="steps">
+      <li><b>HTML:</b> een kop met je naam, een alinea over jezelf en een lijstje.</li>
+      <li><b>CSS:</b> kies een achtergrondkleur en een kleur voor je kop.</li>
+      <li><b>JavaScript:</b> maak een knop die iets leuks doet, zoals een tekst veranderen of een teller ophogen.</li>
+    </ol>
+
+    <div class="pg" data-pg>
+      <div class="pane"><label>Jouw code <span>HTML + CSS + JS</span></label>
+<textarea spellcheck="false">&lt;style&gt;
+  body { font-family: sans-serif; padding: 16px; }
+&lt;/style&gt;
+
+&lt;h1&gt;Alles over mij&lt;/h1&gt;
+&lt;p&gt;Schrijf hier iets over jezelf...&lt;/p&gt;
+
+&lt;button onclick="doeIets()"&gt;Verras me!&lt;/button&gt;
+&lt;p id="tekst"&gt;&lt;/p&gt;
+
+&lt;script&gt;
+  function doeIets() {
+    document.getElementById("tekst").textContent = "Dit heb ik zelf gemaakt! 🚀";
+  }
+&lt;/script&gt;</textarea>
+        <div class="tools"><button class="btn ghost" data-reset>↺ Begin opnieuw</button></div>
+      </div>
+      <div class="pane"><label>Resultaat</label><iframe sandbox="allow-scripts" title="Resultaat"></iframe></div>
+    </div>
+
+    <h3>✅ Checklist</h3>
+    <label class="check"><input type="checkbox"><span>Mijn pagina heeft een <b>kop</b> en <b>tekst</b> (HTML).</span></label>
+    <label class="check"><input type="checkbox"><span>Ik heb minstens <b>één kleur</b> aangepast (CSS).</span></label>
+    <label class="check"><input type="checkbox"><span>Mijn <b>knop doet iets</b> (JavaScript).</span></label>
+    <label class="check"><input type="checkbox"><span>Ik heb mijn pagina aan <b>een klasgenoot laten zien</b>.</span></label>
+    <details class="teacher"><summary>👩‍🏫 Docenttips</summary><ul>
+      <li>Loop rond en stel vragen in plaats van de oplossing te geven: <i>“Wat verwacht je dat er gebeurt?”</i></li>
+      <li>Laat snelle leerlingen een tweede knop maken, of de kleur van de pagina laten veranderen bij een klik.</li>
+      <li>Leerlingen kunnen hun code kopiëren naar een Word-/Notities-bestand als ze die willen bewaren.</li>
+    </ul></details>
+  </div>
+</section>
+
+<!-- 7 -->
+<section id="s7" data-start="47">
+  <div class="card">
+    <div class="sec-head"><div class="num c7">7</div><div><h2>Afsluiting & quiz</h2><span class="time">47 – 50 min</span></div></div>
+    <div class="goal"><b>Doel:</b> je test wat je hebt onthouden.</div>
+    <div id="quiz"></div>
+    <div class="score" id="score"></div>
+    <div style="margin-top:22px">
+      <h3>🧠 Terugblik: wat neem je mee?</h3>
+      <ul>
+        <li><b>Code</b> = precieze opdrachten voor een computer.</li>
+        <li><b>HTML</b> = wat er staat · <b>CSS</b> = hoe het eruitziet · <b>JavaScript</b> = wat het doet.</li>
+        <li>Fouten (bugs) maken hoort erbij. Zo leer je!</li>
+      </ul>
+    </div>
+    <div class="tip">🚀 <b>Wil je thuis verder?</b> Kijk naar <b>Scratch</b> (blokjes), <b>code.org</b> of <b>Khan Academy</b> en vraag je docent naar tips.</div>
+  </div>
+</section>
+
+</main>
+
+<footer class="wrap">Goed gedaan, jij bent nu een beginnende programmeur! 🎉</footer>
+
+<script>
+/* ---------- Typende tekst ---------- */
+(function(){
+  const t = document.getElementById('typed');
+  const lines = ['print("Hallo wereld!")', '<h1>Mijn eerste website</h1>', 'let score = 0;'];
+  let li = 0, ci = 0, del = false;
+  function tick(){
+    const full = lines[li];
+    t.textContent = full.slice(0, ci);
+    if(!del && ci < full.length){ ci++; setTimeout(tick, 70); }
+    else if(!del){ del = true; setTimeout(tick, 1400); }
+    else if(ci > 0){ ci--; setTimeout(tick, 30); }
+    else { del = false; li = (li + 1) % lines.length; setTimeout(tick, 300); }
+  }
+  tick();
+})();
+
+/* ---------- Playgrounds ---------- */
+document.querySelectorAll('[data-pg]').forEach(pg => {
+  const ta = pg.querySelector('textarea');
+  const fr = pg.querySelector('iframe');
+  const initial = ta.value;
+  let timer;
+  const render = () => { fr.srcdoc = ta.value; };
+  ta.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(render, 250); });
+  ta.addEventListener('keydown', e => {
+    if(e.key === 'Tab'){
+      e.preventDefault();
+      const s = ta.selectionStart;
+      ta.setRangeText('  ', s, ta.selectionEnd, 'end');
+      ta.dispatchEvent(new Event('input'));
+    }
+  });
+  pg.querySelector('[data-reset]').addEventListener('click', () => { ta.value = initial; render(); });
+  render();
+});
+
+/* ---------- Checklists ---------- */
+document.querySelectorAll('.check input').forEach(cb => {
+  cb.addEventListener('change', () => cb.closest('.check').classList.toggle('done', cb.checked));
+});
+
+/* ---------- Quiz ---------- */
+const questions = [
+  {q:'Wat is code?', o:['Een geheime taal voor spionnen','Precieze opdrachten voor een computer','Een soort plaatje op je scherm'], a:1, e:'Code is een lijst opdrachten die de computer stap voor stap uitvoert.'},
+  {q:'Welke taal bepaalt wat er op een webpagina STAAT (kop, tekst, lijst)?', o:['HTML','CSS','Python'], a:0, e:'HTML is het skelet van de pagina.'},
+  {q:'Je wilt de achtergrond van je pagina blauw maken. Wat gebruik je?', o:['HTML','CSS','Niets, dat kan niet'], a:1, e:'CSS regelt kleuren en uiterlijk.'},
+  {q:'Wat is een variabele?', o:['Een fout in je code','Een doosje met een naam waarin je iets bewaart','Een knop op de pagina'], a:1, e:'Bijvoorbeeld score = 0: het doosje “score” bevat het getal 0.'},
+  {q:'Wat is een bug?', o:['Een fout in een programma','Een dier in je computer','Een nieuwe tag'], a:0, e:'Een bug is een fout. Ze oplossen heet “debuggen” en daar leer je het meest van.'}
+];
+let correct = 0, answered = 0;
+const quiz = document.getElementById('quiz');
+questions.forEach((it, qi) => {
+  const d = document.createElement('div'); d.className = 'q';
+  d.innerHTML = '<h3>' + (qi+1) + '. ' + it.q + '</h3><div class="opts"></div><div class="fb"></div>';
+  const opts = d.querySelector('.opts'), fb = d.querySelector('.fb');
+  it.o.forEach((txt, oi) => {
+    const b = document.createElement('button'); b.className = 'opt'; b.textContent = txt;
+    b.onclick = () => {
+      opts.querySelectorAll('button').forEach(x => x.disabled = true);
+      answered++;
+      if(oi === it.a){ b.classList.add('right'); fb.textContent = '✅ Goed! ' + it.e; correct++; }
+      else { b.classList.add('wrong'); opts.children[it.a].classList.add('right'); fb.textContent = '❌ Bijna. ' + it.e; }
+      if(answered === questions.length){
+        const sc = document.getElementById('score');
+        sc.textContent = 'Jouw score: ' + correct + ' van ' + questions.length + (correct >= 4 ? ' 🏆' : ' 💪');
+        if(correct >= 4) confetti();
+      }
+    };
+    opts.appendChild(b);
+  });
+  quiz.appendChild(d);
+});
+
+/* ---------- Confetti ---------- */
+function confetti(){
+  const box = document.createElement('div'); box.className = 'confetti';
+  const colors = ['#6c4cf5','#ff4f8b','#ffc83d','#00b8a9','#ff7a59'];
+  for(let i=0;i<90;i++){
+    const p = document.createElement('i');
+    p.style.left = Math.random()*100 + '%';
+    p.style.background = colors[i % colors.length];
+    p.style.animationDuration = (2 + Math.random()*2.5) + 's';
+    p.style.animationDelay = Math.random()*0.8 + 's';
+    box.appendChild(p);
+  }
+  document.body.appendChild(box);
+  setTimeout(() => box.remove(), 6000);
+}
+
+/* ---------- Lestimer ---------- */
+const TOTAL = 50*60;
+const sections = [...document.querySelectorAll('main section')];
+const labels = ['Code?','HTML','CSS','JS','Python','Project','Quiz'];
+const chips = document.getElementById('chips');
+sections.forEach((s,i) => {
+  const a = document.createElement('a'); a.className = 'chip'; a.href = '#' + s.id;
+  a.textContent = (i+1) + ' ' + labels[i]; chips.appendChild(a);
+});
+const chipEls = [...chips.children];
+const starts = sections.map(s => +s.dataset.start);
+let elapsed = 0, running = false, iv = null;
+const clock = document.getElementById('clock'), prog = document.getElementById('prog');
+const startBtn = document.getElementById('startBtn');
+
+function fmt(sec){ const m = Math.floor(sec/60), s = sec%60; return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0'); }
+function update(){
+  const left = Math.max(0, TOTAL - elapsed);
+  clock.textContent = fmt(left);
+  prog.style.width = Math.min(100, elapsed/TOTAL*100) + '%';
+  const min = elapsed/60;
+  let cur = 0; starts.forEach((st,i) => { if(min >= st) cur = i; });
+  chipEls.forEach((c,i) => {
+    c.classList.toggle('active', (running || elapsed>0) && i === cur);
+    c.classList.toggle('done', elapsed>0 && i < cur);
+  });
+  clock.style.color = left <= 120 && elapsed>0 ? 'var(--pink)' : '';
+}
+function tick(){
+  elapsed++;
+  update();
+  if(elapsed >= TOTAL){ stop(); startBtn.textContent = '✔ Klaar'; }
+}
+function stop(){ running = false; clearInterval(iv); startBtn.textContent = '▶ Verder'; }
+startBtn.addEventListener('click', () => {
+  if(elapsed >= TOTAL) return;
+  if(running){ stop(); }
+  else {
+    running = true; iv = setInterval(tick, 1000); startBtn.textContent = '⏸ Pauze';
+    if(elapsed === 0) document.getElementById('s1').scrollIntoView();
+  }
+  update();
+});
+document.getElementById('resetBtn').addEventListener('click', () => {
+  stop(); elapsed = 0; startBtn.textContent = '▶ Start les'; update();
+});
+update();
+</script>
+</body>
+</html>
