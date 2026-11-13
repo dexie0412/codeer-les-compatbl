@@ -127,9 +127,50 @@
   .confetti i{position:absolute;top:-20px;width:10px;height:14px;animation:fall linear forwards}
   @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
   @media print{.bar,.pg .tools{display:none}.card{box-shadow:none;break-inside:avoid}}
+
+  /* ---- Meedoen-scherm & live-status ---- */
+  body.locked{overflow:hidden}
+  .gate{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:20px;overflow:auto;background:linear-gradient(135deg,#6c4cf5 0%,#9b5cff 45%,#ff4f8b 100%)}
+  .gate[hidden]{display:none}
+  .gate-card{width:100%;max-width:440px;background:var(--card);color:var(--ink);border-radius:24px;padding:30px;box-shadow:0 30px 80px rgba(20,10,60,.35)}
+  .gate-card h2{font-size:28px;margin:0 0 6px}
+  .gate-card p{margin:0 0 6px;color:var(--muted)}
+  .gate-card label{display:block;font-weight:700;font-size:14px;margin:16px 0 6px}
+  .gate-card input{width:100%;font:inherit;font-size:20px;padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:var(--bg);color:var(--ink);outline:none}
+  .gate-card input:focus{border-color:var(--brand)}
+  .gate-card input.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:30px;letter-spacing:.35em;text-align:center;text-transform:uppercase;font-weight:800;padding-left:calc(14px + .35em)}
+  .gate-card .btn{width:100%;margin-top:16px;padding:14px;font-size:18px}
+  .gate-card .btn[hidden]{display:none}
+  .gate-card .btn:disabled{opacity:.6;cursor:wait;transform:none;box-shadow:none}
+  .gate-msg{min-height:1.4em;margin-top:12px;font-size:15px;font-weight:600}
+  .gate-msg.err{color:var(--pink)} .gate-msg.info{color:var(--muted)}
+  .eye{display:flex;gap:10px;align-items:flex-start;background:color-mix(in srgb,var(--sun) 22%,transparent);border-radius:14px;padding:10px 12px;font-size:14px;margin-top:18px}
+  .live{position:fixed;left:16px;bottom:16px;z-index:150;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:99px;padding:8px 14px;font-weight:700;font-size:14px}
+  .live[hidden]{display:none}
+  .live i{width:10px;height:10px;border-radius:50%;background:var(--brand2)}
+  .live.warn i{background:var(--warm)} .live.off i{background:#9aa3bd}
+  .nudge{position:fixed;right:16px;bottom:16px;z-index:150;max-width:320px;background:var(--card);border:2px solid var(--warm);box-shadow:var(--shadow);border-radius:16px;padding:12px 16px;font-weight:600;font-size:15px}
 </style>
 </head>
-<body>
+<body class="locked">
+<!-- Meedoen-scherm -->
+<div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+  <form class="gate-card" id="gateForm" autocomplete="off">
+    <div style="font-size:42px">👋</div>
+    <h2 id="gateTitle">Meedoen met de les</h2>
+    <p>Vraag je docent om de lescode en vul die hier in.</p>
+    <label for="gName">Jouw voornaam</label>
+    <input id="gName" maxlength="20" placeholder="Bijv. Sam" required>
+    <label for="gCode">Lescode</label>
+    <input id="gCode" class="code" maxlength="6" placeholder="······" autocapitalize="characters" spellcheck="false" required>
+    <div class="eye"><span>👀</span><span>Je docent kan zien of je in dit tabblad blijft. Als je naar een ander tabblad of programma gaat, wordt dat gemeld.</span></div>
+    <button class="btn" id="gBtn" type="submit">Meedoen</button>
+    <div class="gate-msg info" id="gMsg" role="status"></div>
+    <button class="btn ghost" id="gOffline" type="button" hidden>Doorgaan zonder verbinding</button>
+  </form>
+</div>
+<div class="live" id="live" hidden><i></i><span id="liveTxt"></span></div>
+
 
 <header class="hero">
   <div class="wrap">
@@ -604,6 +645,165 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   stop(); elapsed = 0; startBtn.textContent = '▶ Start les'; update();
 });
 update();
+</script>
+
+<script>
+/* ---------- Meedoen met lescode + melden of je in het tabblad blijft ---------- */
+(function(){
+  const PREFIX = 'kcl-nl-';
+  const $ = id => document.getElementById(id);
+  const gate = $('gate'), form = $('gateForm'), gName = $('gName'), gCode = $('gCode'),
+        gBtn = $('gBtn'), gMsg = $('gMsg'), gOff = $('gOffline'), live = $('live'), liveTxt = $('liveTxt');
+
+  // De docent opent de les met #docent achter het adres: dan is er geen code nodig.
+  if (/docent/.test(location.hash)) { gate.hidden = true; document.body.classList.remove('locked'); return; }
+
+  const store = (k, v) => { try { if (v === undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k, v); } catch(e){ return null; } };
+  let sid = store('kcl-sid');
+  if (!sid) {
+    sid = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 's' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    store('kcl-sid', sid);
+  }
+  gName.value = store('kcl-name') || '';
+  gCode.value = store('kcl-code') || '';
+
+  let peer = null, conn = null, st = { name: '', code: '' };
+  let joined = false, stopped = false, hb = null, retry = null, lastSent = false, pend = null, awaySince = 0;
+
+  const setMsg = (t, k) => { gMsg.textContent = t; gMsg.className = 'gate-msg ' + (k || 'info'); };
+  const setPill = (kind, t) => { live.hidden = false; live.className = 'live' + (kind === 'ok' ? '' : ' ' + kind); liveTxt.textContent = t; };
+  function nudge(t){ const d = document.createElement('div'); d.className = 'nudge'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 6000); }
+
+  function loadPeer(){
+    if (window.Peer) return Promise.resolve();
+    const urls = ['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js'];
+    return urls.reduce((pr, u) => pr.catch(() => new Promise((res, rej) => {
+      const s = document.createElement('script'); s.src = u;
+      s.onload = () => window.Peer ? res() : rej(); s.onerror = () => rej();
+      document.head.appendChild(s);
+    })), Promise.reject());
+  }
+
+  function cleanup(){
+    const oc = conn; conn = null;                 // eerst leegmaken, zodat close-events de oude verbinding negeren
+    try { oc && oc.close(); } catch(e){}
+    try { peer && peer.destroy(); } catch(e){}
+    peer = null;
+  }
+  const isAway = () => document.hidden || !document.hasFocus();
+  const send = m => { try { if (conn && conn.open) conn.send(m); } catch(e){} };
+
+  // Eén poging om met de docent te verbinden. Geeft het welkomstbericht terug of faalt met {kind}.
+  function attempt(name, code){
+    return new Promise((resolve, reject) => {
+      cleanup();
+      let done = false;
+      const fail = (kind, detail) => { if (done) return; done = true; clearTimeout(timer); reject({ kind, detail }); };
+      const timer = setTimeout(() => fail('timeout'), 15000);
+      const p = new Peer({ debug: 0 }); peer = p;
+      p.on('error', e => fail(e.type === 'peer-unavailable' ? 'nocode' : 'net', e.type));
+      p.on('open', () => {
+        const c = p.connect(PREFIX + code, { reliable: true, serialization: 'json' });
+        c.on('open', () => { lastSent = isAway(); c.send({ t: 'join', sid, name, away: lastSent }); });
+        c.on('data', m => {
+          if (!m || typeof m !== 'object') return;
+          if (m.t === 'welcome') { if (!done) { done = true; clearTimeout(timer); conn = c; resolve(m); } }
+          else if (m.t === 'reject') fail('reject', m.reason);
+          else if (m.t === 'kick') lockWith('De docent heeft je uit de les gehaald. Vraag je docent als dit niet klopt.');
+          else if (m.t === 'end') lockWith('De docent heeft de les afgesloten. Vul een nieuwe code in om opnieuw mee te doen.');
+        });
+        c.on('close', () => { if (!done) fail('timeout'); else onClosed(c); });
+        c.on('error', () => { if (!done) fail('net'); });
+      });
+    });
+  }
+
+  function startHeartbeat(){ clearInterval(hb); hb = setInterval(() => send({ t: 'ping', away: lastSent }), 5000); }
+
+  function onClosed(c){
+    if (c !== conn || stopped || !joined) return;
+    setPill('warn', 'Verbinding met docent verbroken…');
+    scheduleRetry();
+  }
+  function scheduleRetry(){
+    clearTimeout(retry);
+    retry = setTimeout(async () => {
+      if (stopped) return;
+      try {
+        const w = await attempt(st.name, st.code);
+        st.name = w.name || st.name; setPill('ok', 'Verbonden met je docent'); startHeartbeat();
+      } catch (err) {
+        if (err && (err.kind === 'nocode')) lockWith('De les is afgesloten of de code werkt niet meer.');
+        else if (err && err.kind === 'reject') lockWith(err.detail || 'Je kunt niet meer meedoen.');
+        else scheduleRetry();
+      }
+    }, 4000);
+  }
+
+  function lockWith(msg){
+    stopped = true; joined = false;
+    clearInterval(hb); clearTimeout(retry); clearTimeout(pend);
+    cleanup();
+    live.hidden = true; gate.hidden = false; document.body.classList.add('locked');
+    gBtn.disabled = false; gOff.hidden = true; setMsg(msg, 'err');
+  }
+
+  /* ---------- tabblad bijhouden ---------- */
+  function report(away){
+    lastSent = away;
+    send({ t: 'state', away });
+    if (away) awaySince = Date.now();
+    else if (awaySince) {
+      const secs = Math.round((Date.now() - awaySince) / 1000);
+      awaySince = 0;
+      if (secs >= 2) nudge('Je was ' + secs + ' seconden weg uit het lestabblad. Je docent ziet dit.');
+    }
+  }
+  function check(){
+    if (!joined || stopped) return;
+    const a = isAway();
+    if (a === lastSent) { clearTimeout(pend); return; }
+    clearTimeout(pend);
+    if (a) pend = setTimeout(() => { if (isAway() && !lastSent) report(true); }, 1000);   // korte flitsen negeren
+    else report(false);
+  }
+  document.addEventListener('visibilitychange', check);
+  window.addEventListener('blur', () => setTimeout(check, 50));
+  window.addEventListener('focus', () => setTimeout(check, 50));
+
+  /* ---------- formulier ---------- */
+  gCode.addEventListener('input', () => { gCode.value = gCode.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const name = gName.value.trim().slice(0, 20), code = gCode.value.trim().toUpperCase();
+    if (!name) { setMsg('Vul je voornaam in.', 'err'); return; }
+    if (code.length !== 6) { setMsg('Een lescode heeft 6 tekens.', 'err'); return; }
+    start(name, code);
+  });
+  async function start(name, code){
+    stopped = false; gBtn.disabled = true; gOff.hidden = true; setMsg('Verbinden met je docent…', 'info');
+    try {
+      await loadPeer();
+      const w = await attempt(name, code);
+      st = { name: w.name || name, code };
+      store('kcl-name', name); store('kcl-code', code);
+      joined = true; gate.hidden = true; document.body.classList.remove('locked');
+      gBtn.disabled = false; setMsg('', 'info');
+      setPill('ok', 'Verbonden met je docent'); startHeartbeat(); check();
+    } catch (err) {
+      gBtn.disabled = false; cleanup();
+      const k = err && err.kind;
+      if (k === 'nocode') setMsg('Deze code bestaat niet. Controleer de code, of vraag je docent of de les al is gestart.', 'err');
+      else if (k === 'reject') setMsg(err.detail || 'Je kunt niet meedoen.', 'err');
+      else if (k === 'timeout') { setMsg('Het lukt niet om met je docent te verbinden. Soms blokkeert het schoolnetwerk dit. Probeer het nog eens.', 'err'); gOff.hidden = false; }
+      else { setMsg('Geen verbinding met de server. Heb je internet?', 'err'); gOff.hidden = false; }
+    }
+  }
+  gOff.addEventListener('click', () => {
+    stopped = true; joined = false; cleanup();
+    gate.hidden = true; document.body.classList.remove('locked'); setPill('off', 'Niet verbonden met docent');
+  });
+})();
 </script>
 </body>
 </html>
